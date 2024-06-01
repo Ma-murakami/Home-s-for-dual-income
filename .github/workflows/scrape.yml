@@ -1,0 +1,33 @@
+name: Scrape Suumo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4 pandas retry
+
+    - name: Run scrape script
+      run: python scrape_suumo.py
+
+    - name: Upload suumo_data.db
+      uses: actions/upload-artifact@v2
+      with:
+        name: suumo_data.db
+        path: suumo_data.db
