@@ -14,8 +14,7 @@ def get_html(url):
 # 東京23区を対象とした検索URL
 base_url = "https://suumo.jp/jj/chintai/ichiran/FR301FC001/?ar=030&bs=040&ta=13&sc=13101&sc=13102&sc=13103&sc=13104&sc=13105&sc=13113&sc=13106&sc=13107&sc=13108&sc=13118&sc=13121&sc=13122&sc=13123&sc=13109&sc=13110&sc=13111&sc=13112&sc=13114&sc=13115&sc=13120&sc=13116&sc=13117&sc=13119&cb=0.0&ct=9999999&mb=0&mt=9999999&et=9999999&cn=9999999&shkr1=03&shkr2=03&shkr3=03&shkr4=03&sngz=&po1=25&pc=50&page={}"
 all_data = []
-max_page = 1
-#テスト用(2195が元の値）
+max_page = 1  # テスト用にページ数を1に設定
 
 for page in range(1, max_page+1):
     # URLを定義
@@ -65,56 +64,6 @@ df = pd.DataFrame(all_data)
 df = df.drop_duplicates() 
 df.head(2)
 
-# データフレームをSQLiteに保存する関数
-def save_to_sqlite(df, db_name="suumo_data.db"):
-    # SQLiteデータベースへの接続を確立
-    conn = sq.connect(db_name)
-    cursor = conn.cursor()
-
-    # テーブルを作成するSQLクエリ
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS properties (
-        名称 TEXT,
-        カテゴリー TEXT,
-        アドレス TEXT,
-        アクセス TEXT,
-        築年数 TEXT,
-        構造 TEXT,
-        階数 TEXT,
-        家賃 TEXT,
-        管理費 TEXT,
-        敷金 TEXT,
-        礼金 TEXT,
-        間取り TEXT,
-        面積 TEXT,
-        物件画像URL TEXT,
-        間取画像URL TEXT,
-        物件詳細URL TEXT
-    )
-    """
-
-    # テーブルを作成
-    cursor.execute(create_table_query)
-
-    # データフレームをSQLデータベースに挿入
-    df.to_sql("properties", conn, if_exists="append", index=False)
-
-    # コミットして接続を閉じる
-    conn.commit()
-    conn.close()
-
-# データフレームに変換
-df = pd.DataFrame(all_data)
-
-# 重複データの削除
-df = df.drop_duplicates()
-
-# データフレームの最初の2行を表示
-print(df.head(2))
-
-# データフレームをSQLiteに保存
-save_to_sqlite(df)
-
 # 数値変換のための関数
 def convert_to_number(text):
     try:
@@ -158,7 +107,7 @@ def save_to_sqlite(df, db_name="suumo_data.db"):
         カテゴリー TEXT,
         アドレス TEXT,
         築年数 REAL,
-        構造 REAL,
+        構造 TEXT,
         階数 REAL,
         家賃 REAL,
         管理費 REAL,
@@ -187,12 +136,6 @@ def save_to_sqlite(df, db_name="suumo_data.db"):
     # コミットして接続を閉じる
     conn.commit()
     conn.close()
-
-# データフレームに変換
-df = pd.DataFrame(all_data)
-
-# 重複データの削除
-df = df.drop_duplicates()
 
 # アクセス情報を分割して新しい列を追加
 access_splits = df.apply(split_access, axis=1)
