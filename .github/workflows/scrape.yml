@@ -24,7 +24,7 @@ jobs:
         pip install requests beautifulsoup4 pandas retry
 
     - name: Run scrape script
-      run: python scrape_suumo.py
+      run: python step3-1_scraping.py
 
     - name: Upload suumo_data.db
       uses: actions/upload-artifact@v2
