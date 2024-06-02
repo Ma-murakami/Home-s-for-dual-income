@@ -100,7 +100,6 @@ def main():
         selected_stations = st.sidebar.multiselect('興味がある駅を5つまで選択してください', st.session_state['suggested_stations'], max_selections=5)
         for i, station in enumerate(st.session_state['suggested_stations']):
             if station in selected_stations:
-                st.sidebar.text_area(f'理由: {station}', st.session_state['reasons'][i], height=100)
     else:
         selected_stations = []
 
@@ -127,5 +126,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
 
