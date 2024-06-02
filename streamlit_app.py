@@ -18,27 +18,55 @@ def get_data_from_db():
 def get_suggested_stations_and_reasons(work_station, commuting_time):
     prompt = f"{work_station}に{commuting_time}分以内に行ける、生活が便利で、住みやすい穴場の駅を5つ提案し、その理由を述べてください。"
     response = requests.post(
-        "https://api.openai.com/v1/completions",
+        "https://api.openai.com/v1/chat/completions",
         headers={
             "Authorization": f"Bearer {openai_api_key}",
             "Content-Type": "application/json"
         },
         json={
-            "model": "text-davinci-003",
-            "prompt": prompt,
-            "max_tokens": 300
+            "model": "gpt-3.5-turbo",
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 500
         }
     )
-    response_json = response.json()
-    stations_and_reasons = response_json['choices'][0]['text'].strip().split('\n')
-    stations = []
-    reasons = []
-    for line in stations_and_reasons:
-        if line.startswith('1. ') or line.startswith('2. ') or line.startswith('3. ') or line.startswith('4. ') or line.startswith('5. '):
-            stations.append(line)
+
+    if response.status_code == 200:
+        response_json = response.json()
+        if 'choices' in response_json:
+            content = response_json['choices'][0]['message']['content'].strip()
+            # 提案メッセージの確認と削除
+            if "提案します。" in content:
+                content = content.split("提案します。")[1].strip()
+            stations_and_reasons = content.split('\n')
+            stations = []
+            reasons = []
+            current_reason = ""
+            for line in stations_and_reasons:
+                if line.startswith(('1. ', '2. ', '3. ', '4. ', '5. ')):
+                    if current_reason:
+                        reasons.append(current_reason.strip())
+                    stations.append(line)
+                    current_reason = ""
+                else:
+                    current_reason += line + " "
+            if current_reason:
+                reasons.append(current_reason.strip())
+            
+            # Ensure there are exactly 5 stations and reasons
+            while len(stations) < 5:
+                stations.append("N/A")
+                reasons.append("N/A")
+                
+            return stations[:5], reasons[:5]
         else:
-            reasons.append(line)
-    return stations, reasons
+            st.error("APIレスポンスに'choices'キーが含まれていません。")
+            return [], []
+    else:
+        st.error(f"APIリクエストが失敗しました。ステータスコード: {response.status_code}, レスポンス: {response.text}")
+        return [], []
 
 # Streamlitアプリケーション
 def main():
@@ -63,6 +91,12 @@ def main():
         st.session_state['reasons'] = reasons
 
     if 'suggested_stations' in st.session_state:
+        st.header('おすすめの駅と理由')
+        st.write("東京駅から35分以内で行ける、生活が便利で住みやすい穴場の駅を以下に5つ提案します。")
+        for i in range(len(st.session_state['suggested_stations'])):
+            st.subheader(st.session_state['suggested_stations'][i])
+            st.write(st.session_state['reasons'][i])
+
         selected_stations = st.sidebar.multiselect('興味がある駅を5つまで選択してください', st.session_state['suggested_stations'], max_selections=5)
         for i, station in enumerate(st.session_state['suggested_stations']):
             if station in selected_stations:
@@ -93,4 +127,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
 
