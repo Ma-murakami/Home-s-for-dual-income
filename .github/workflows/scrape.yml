@@ -1,5 +1,6 @@
 name: Scrape Suumo
 
+
 on:
   push:
     branches:
