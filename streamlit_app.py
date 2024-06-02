@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 
 # OpenAIのAPIキーを設定（ChatGPTのAPIキーをここに設定）
-openai_api_key = st.secrets['openai_APIkey']
+openai_api_key = "ダミー"
 
 # SQLiteデータベースに接続
 def get_data_from_db():
@@ -40,14 +40,16 @@ def get_suggested_stations_and_reasons(work_station, walk_time):
             reasons.append(line)
     return stations, reasons
 
+st.multiselect('興味がある駅を5つまで選択してください', options=st.session_state['sites'])
+
 # Streamlitアプリケーション
 def main():
     st.title('おのぼりホームズ')
 
     df = get_data_from_db()
 
-# サイドバーのフィルタリングオプション
-st.sidebar.header('希望条件')
+    # サイドバーのフィルタリングオプション
+    st.sidebar.header('希望条件')
     rent_range = st.sidebar.slider('家賃 (円)', 0, 250000, (0, 250000), step=1000)
     management_fee_range = st.sidebar.slider('管理費 (円)', 0, 50000, (0, 50000), step=1000)
     age_range = st.sidebar.slider('築年数', 0, 50, (0, 50), step=1)
@@ -55,9 +57,9 @@ st.sidebar.header('希望条件')
     layout = st.sidebar.selectbox('間取り', ['すべて', '1K', '1DK', '1LDK', '2K', '2DK', '2LDK', '3K', '3DK', '3LDK', '4LDK'])
 
     work_station = st.sidebar.text_input('職場の最寄り駅')
-    walk_time = st.sidebar.number_input('職場までの徒歩所要時間 (分)', min_value=1, max_value=60, value=10)
+    walk_time = st.sidebar.number_input('職場の最寄り駅までの所要時間 (分)', min_value=1, max_value=60, value=10)
 
- # ChatGPTを使って駅を提案
+    # ChatGPTを使って駅を提案
     if st.sidebar.button('駅検索スタートボタン'):
         suggested_stations, reasons = get_suggested_stations_and_reasons(work_station, walk_time)
         selected_station = st.sidebar.selectbox('オススメの駅', suggested_stations)
@@ -88,3 +90,4 @@ st.sidebar.header('希望条件')
 
 if __name__ == '__main__':
     main()
+
